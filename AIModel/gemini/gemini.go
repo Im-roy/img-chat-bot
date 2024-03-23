@@ -31,8 +31,8 @@ func (g *GeminiAI) GetClient() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	g.SetGenerativeModel("gemini-pro-vision")
 	g.client = client
+	g.SetGenerativeModel("gemini-pro-vision")
 }
 
 func (g *GeminiAI) Close() {
@@ -40,7 +40,7 @@ func (g *GeminiAI) Close() {
 }
 
 func (g *GeminiAI) SetGenerativeModel(model string) {
-	g.model = g.client.GenerativeModel(model) // "gemini-pro-vision"
+	g.model = g.client.GenerativeModel(model)
 }
 
 func (g *GeminiAI) GenerateContent(ctx context.Context, promptMessage string, additionalImageData []model.PromptImageModel) (string, error) {
