@@ -1,13 +1,15 @@
 package server
 
 import (
+	"img-chat-bot/chatbot"
 	"net/http"
 
 	"github.com/gorilla/mux"
 )
 
 type HttpRoutesHandler struct {
-	Router *mux.Router
+	Router  *mux.Router
+	ChatBot chatbot.ChatBot
 }
 
 func (h *HttpRoutesHandler) RegisterRoutes() {

@@ -1,6 +1,9 @@
 package server
 
 import (
+	aimodel "img-chat-bot/AIModel"
+	"img-chat-bot/AIModel/gemini"
+	"img-chat-bot/chatbot"
 	"log"
 	"net/http"
 	"time"
@@ -22,6 +25,11 @@ func (h *HttpHandler) Init() {
 
 	httpRouter := HttpRoutesHandler{
 		Router: apiRouter,
+		ChatBot: chatbot.ChatBot{
+			AIModel: aimodel.AiModel{
+				AIClient: gemini.GeminiAI{},
+			},
+		},
 	}
 	httpRouter.RegisterRoutes()
 	h.ServeHttp()
