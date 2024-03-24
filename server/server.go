@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"img-chat-bot/model"
+	"img-chat-bot/utils"
 	"io/ioutil"
 	"net/http"
 )
@@ -20,7 +21,7 @@ func (h *HttpRoutesHandler) HandleAddImages(w http.ResponseWriter, r *http.Reque
 	fileData, fileHeader, err := r.FormFile("image")
 	if err != nil {
 		fmt.Println("Error retrieving the file from form data: ", err)
-		w.WriteHeader(http.StatusBadRequest)
+		utils.HTTPFailWith4xx(err.Error(), w)
 		return
 	}
 	defer fileData.Close()
@@ -29,11 +30,10 @@ func (h *HttpRoutesHandler) HandleAddImages(w http.ResponseWriter, r *http.Reque
 		Data:   fileData,
 	}, 1)
 	if err != nil {
-		http.Error(w, http.StatusText(500), http.StatusInternalServerError)
+		utils.HTTPFailWith4xx(err.Error(), w)
 		return
 	}
-	w.WriteHeader(http.StatusCreated)
-	fmt.Fprintf(w, "Image uploaded successfully: %s", fileHeader.Filename)
+	utils.HTTPSuccessWith200(fmt.Sprintf("Image uploaded successfully: %s", fileHeader.Filename), w)
 }
 
 func (h *HttpRoutesHandler) HandleGetImages(w http.ResponseWriter, r *http.Request) {
@@ -43,24 +43,23 @@ func (h *HttpRoutesHandler) HandleGetImages(w http.ResponseWriter, r *http.Reque
 func (h *HttpRoutesHandler) HandleUserPrompt(w http.ResponseWriter, r *http.Request) {
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, http.StatusText(400), http.StatusBadRequest)
+		utils.HTTPFailWith4xx(err.Error(), w)
 		return
 	}
 
 	requestBody := model.RequestModel{}
 	err = json.Unmarshal(reqBody, &requestBody)
 	if err != nil {
-		http.Error(w, http.StatusText(400), http.StatusBadRequest)
+		utils.HTTPFailWith4xx(err.Error(), w)
 		return
 	}
 
 	ctx := r.Context()
 	resp, err := h.ChatBot.GenerateResponse(ctx, requestBody.Prompt, 1)
 	if err != nil {
-		http.Error(w, http.StatusText(500), http.StatusInternalServerError)
+		utils.HTTPFailWith5xx(err.Error(), w)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(resp))
+	utils.HTTPSuccessWith200(resp, w)
 	return
 }
