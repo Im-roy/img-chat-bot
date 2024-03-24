@@ -13,8 +13,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(dbClient)
+
 	// start http server
 	httpHandler := server.HttpHandler{}
-	httpHandler.Init()
+	httpHandler.Init(dbClient)
 }

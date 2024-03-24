@@ -4,11 +4,14 @@ import (
 	aimodel "img-chat-bot/AIModel"
 	"img-chat-bot/AIModel/gemini"
 	"img-chat-bot/chatbot"
+	dbRepo "img-chat-bot/repo/dbRepo"
+	fileRepo "img-chat-bot/repo/fileRepo"
 	"log"
 	"net/http"
 	"time"
 
 	"github.com/gorilla/mux"
+	"gorm.io/gorm"
 )
 
 type HttpHandler struct {
@@ -19,15 +22,17 @@ func NewHttpHandler() *HttpHandler {
 	return &HttpHandler{}
 }
 
-func (h *HttpHandler) Init() {
+func (h *HttpHandler) Init(db *gorm.DB) {
 	apiRouter := mux.NewRouter()
 	http.Handle("/", apiRouter)
 
 	httpRouter := HttpRoutesHandler{
 		Router: apiRouter,
 		ChatBot: chatbot.ChatBot{
-			AIModel: aimodel.AiModel{
-				AIClient: gemini.GeminiAI{},
+			AIModel:  aimodel.AiModel{AIClient: gemini.GeminiAI{}},
+			FileRepo: fileRepo.FileRepo{},
+			DbRepo: dbRepo.DbRepo{
+				DB: db,
 			},
 		},
 	}

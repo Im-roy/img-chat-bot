@@ -4,11 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"img-chat-bot/model"
-	"io"
 	"io/ioutil"
 	"net/http"
-	"os"
-	"path/filepath"
 )
 
 func (h *HttpRoutesHandler) HandlePing(w http.ResponseWriter, r *http.Request) {
@@ -20,43 +17,23 @@ func (h *HttpRoutesHandler) HandlePing(w http.ResponseWriter, r *http.Request) {
 func (h *HttpRoutesHandler) HandleAddImages(w http.ResponseWriter, r *http.Request) {
 	r.ParseMultipartForm(10 << 20)
 
-	file, handler, err := r.FormFile("image")
+	fileData, fileHeader, err := r.FormFile("image")
 	if err != nil {
 		fmt.Println("Error retrieving the file from form data: ", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	defer file.Close()
-
-	uploadDir := "./images/"
-
-	// Create the uploads directory if it doesn't exist
-	if err := os.MkdirAll(uploadDir, 0777); err != nil {
-		fmt.Println("Error creating directory:", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	// Create a file with a unique name in the uploads directory
-	filePath := filepath.Join(uploadDir, handler.Filename)
-	newFile, err := os.Create(filePath)
+	defer fileData.Close()
+	err = h.ChatBot.SaveUserImage(r.Context(), model.FileDetailsModel{
+		Header: fileHeader,
+		Data:   fileData,
+	}, 1)
 	if err != nil {
-		fmt.Println("Error creating file:", err)
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, http.StatusText(500), http.StatusInternalServerError)
 		return
 	}
-	defer newFile.Close()
-
-	// Copy the uploaded file data to the newly created file
-	_, err = io.Copy(newFile, file)
-	if err != nil {
-		fmt.Println("Error copying file:", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
 	w.WriteHeader(http.StatusCreated)
-	fmt.Fprintf(w, "Image uploaded successfully: %s", handler.Filename)
+	fmt.Fprintf(w, "Image uploaded successfully: %s", fileHeader.Filename)
 }
 
 func (h *HttpRoutesHandler) HandleGetImages(w http.ResponseWriter, r *http.Request) {
