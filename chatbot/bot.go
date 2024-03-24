@@ -7,7 +7,7 @@ import (
 	"img-chat-bot/model"
 	dbrepo "img-chat-bot/repo/dbRepo"
 	fileRepo "img-chat-bot/repo/fileRepo"
-	"log"
+	"img-chat-bot/utils"
 	"os"
 )
 
@@ -19,27 +19,24 @@ type ChatBot struct {
 
 func (cb *ChatBot) GenerateResponse(ctx context.Context, promptMessage string, userID int) (string, error) {
 
-	pathToImage1 := "images/abhi.jpeg"
-	imgData1, err := os.ReadFile(pathToImage1)
+	userImageFilePathMappings, err := cb.GetUserImages(ctx, userID)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 
-	pathToImage2 := "images/announcement.jpg"
-	imgData2, err := os.ReadFile(pathToImage2)
-	if err != nil {
-		log.Fatal(err)
+	additionalImageData := []model.PromptImageModel{}
+	for _, mappings := range userImageFilePathMappings {
+		pathToImage := "images/" + mappings.FilePath
+		imgData, err := os.ReadFile(pathToImage)
+		if err != nil {
+			return "", err
+		}
+		additionalImageData = append(additionalImageData, model.PromptImageModel{
+			ExtensionName: utils.ExtractExtension(mappings.FilePath),
+			Data:          imgData,
+		})
 	}
-	additionalImageData := []model.PromptImageModel{
-		{
-			ExtensionName: "jpeg",
-			Data:          imgData1,
-		},
-		{
-			ExtensionName: "jpg",
-			Data:          imgData2,
-		},
-	}
+
 	aiResponse, err := cb.AIModel.GenerateResponse(ctx, promptMessage, additionalImageData)
 	return aiResponse, nil
 }
@@ -63,4 +60,13 @@ func (cb *ChatBot) SaveUserImage(ctx context.Context, file model.FileDetailsMode
 		return err
 	}
 	return nil
+}
+
+func (cb *ChatBot) GetUserImages(ctx context.Context, userID int) ([]model.UserFilePathMapping, error) {
+
+	userFilepathMappings, err := cb.DbRepo.GetMappings(ctx, userID)
+	if err != nil {
+		return []model.UserFilePathMapping{}, err
+	}
+	return userFilepathMappings, nil
 }
