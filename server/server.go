@@ -3,10 +3,12 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"img-chat-bot/constants"
 	"img-chat-bot/model"
 	"img-chat-bot/utils"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 )
 
 func (h *HttpRoutesHandler) HandlePing(w http.ResponseWriter, r *http.Request) {
@@ -25,10 +27,11 @@ func (h *HttpRoutesHandler) HandleAddImages(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	defer fileData.Close()
+	userID := h.getUserIdFromHeaders(r)
 	err = h.ChatBot.SaveUserImage(r.Context(), model.FileDetailsModel{
 		Header: fileHeader,
 		Data:   fileData,
-	}, 1)
+	}, userID)
 	if err != nil {
 		utils.HTTPFailWith4xx(err.Error(), w)
 		return
@@ -55,11 +58,24 @@ func (h *HttpRoutesHandler) HandleUserPrompt(w http.ResponseWriter, r *http.Requ
 	}
 
 	ctx := r.Context()
-	resp, err := h.ChatBot.GenerateResponse(ctx, requestBody.Prompt, 1)
+	userID := h.getUserIdFromHeaders(r)
+	resp, err := h.ChatBot.GenerateResponse(ctx, requestBody.Prompt, userID)
 	if err != nil {
 		utils.HTTPFailWith5xx(err.Error(), w)
 		return
 	}
 	utils.HTTPSuccessWith200(resp, w)
 	return
+}
+
+func (h *HttpRoutesHandler) getUserIdFromHeaders(r *http.Request) int {
+	userID := r.Header.Get("user_id")
+	if userID == "" {
+		return constants.SYSTEM_USER
+	}
+	intUserID, err := strconv.Atoi(userID)
+	if err != nil {
+		return constants.SYSTEM_USER
+	}
+	return intUserID
 }

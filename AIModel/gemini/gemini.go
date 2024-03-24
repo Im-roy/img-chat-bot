@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	"img-chat-bot/constants"
 	"img-chat-bot/model"
 
 	"github.com/google/generative-ai-go/genai"
@@ -46,6 +47,12 @@ func (g *GeminiAI) SetGenerativeModel(model string) {
 func (g *GeminiAI) GenerateContent(ctx context.Context, promptMessage string, additionalImageData []model.PromptImageModel) (string, error) {
 
 	g.GetClient()
+	if len(additionalImageData) > 0 {
+		g.SetGenerativeModel(constants.GEMINI_PRO_VISION)
+	} else {
+		g.SetGenerativeModel(constants.GEMINI_PRO)
+	}
+
 	if g.client == nil || g.model == nil {
 		return "", fmt.Errorf("error occured")
 	}

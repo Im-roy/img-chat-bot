@@ -3,6 +3,7 @@ package chatbot
 import (
 	"context"
 	aimodel "img-chat-bot/AIModel"
+	"img-chat-bot/constants"
 	datamapper "img-chat-bot/dataMapper"
 	"img-chat-bot/model"
 	dbrepo "img-chat-bot/repo/dbRepo"
@@ -26,7 +27,7 @@ func (cb *ChatBot) GenerateResponse(ctx context.Context, promptMessage string, u
 
 	additionalImageData := []model.PromptImageModel{}
 	for _, mappings := range userImageFilePathMappings {
-		pathToImage := "images/" + mappings.FilePath
+		pathToImage := constants.FILE_DIRECTORY + mappings.FilePath
 		imgData, err := os.ReadFile(pathToImage)
 		if err != nil {
 			return "", err
@@ -43,8 +44,7 @@ func (cb *ChatBot) GenerateResponse(ctx context.Context, promptMessage string, u
 
 func (cb *ChatBot) SaveUserImage(ctx context.Context, file model.FileDetailsModel, userID int) error {
 
-	uploadDir := "./images/"
-	err := cb.FileRepo.SetDirectory(uploadDir)
+	err := cb.FileRepo.SetDirectory(constants.FILE_DIRECTORY)
 	if err != nil {
 		return err
 	}

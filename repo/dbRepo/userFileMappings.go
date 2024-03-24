@@ -21,7 +21,10 @@ func (db *DbRepo) CreateMappings(ctx context.Context, mappings model.UserFilePat
 func (db *DbRepo) GetMappings(ctx context.Context, userID int) ([]model.UserFilePathMapping, error) {
 
 	userFileMappings := []model.UserFilePathMapping{}
-	err := db.DB.Debug().Find(&userFileMappings).Where("user_id = ? and is_active = true", userID).Error
+	err := db.DB.Debug().
+		Where("user_id = ? AND is_active = ?", userID, true).
+		Find(&userFileMappings).
+		Error
 	if err != nil {
 		return []model.UserFilePathMapping{}, err
 	}
