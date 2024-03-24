@@ -1,3 +1,6 @@
+package config
+
+/*
 package main
 
 import (
@@ -63,3 +66,4 @@ func main() {
 		log.Fatalf("invalid migration action: %s (expected 'up' or 'down')", action)
 	}
 }
+*/
