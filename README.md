@@ -8,3 +8,4 @@ steps
 3. integration with gemini api
 4. response back to user
 
+TODO: to be completed
